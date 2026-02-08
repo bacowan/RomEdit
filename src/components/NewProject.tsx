@@ -1,24 +1,45 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { appLocalDataDir, join } from '@tauri-apps/api/path';
 
 const NewProject = () => {
   const [projectFilePath, setProjectFilePath] = useState("");
   const [projectName, setProjectName] = useState("");
   const [romPath, setRomPath] = useState("");
+  const [useRecommendedPath, setUseRecommendedPath] = useState(true);
 
-  const onBrowseClick = async () => {
-    setProjectFilePath(await invoke("open_file_dialog"));
+  const onBrowseProjectClick = async () => {
+    const path = await invoke("open_file_dialog");
+    if (path && typeof path === "string") {
+      setProjectFilePath(path);
+    }
+  }
+
+  const onBrowseRomClick = async () => {
+    const path = await invoke("open_file_dialog");
+    if (path && typeof path === "string") {
+      setRomPath(path);
+    }
   }
 
   const onCreateClick = () => {
   }
+
+  useEffect(() => {
+    if (useRecommendedPath) {
+      (async () => {
+        const saveDir = await appLocalDataDir();
+        const savePath = await join(saveDir, `${projectName}.proj`);
+        setProjectFilePath(savePath);
+      })();
+    }
+  }, [useRecommendedPath, projectName]);
 
   const isFormValid = projectFilePath && projectName && romPath;
 
   return (
     <div className="p-8 w-[500px]">
       <h2 className="text-2xl font-bold mb-6">New Project</h2>
-
       <form className="space-y-4">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
@@ -29,16 +50,31 @@ const NewProject = () => {
               type="text"
               value={projectFilePath}
               onChange={(e) => setProjectFilePath(e.target.value)}
+              readOnly={useRecommendedPath}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Select project file location"
             />
             <button
               type="button"
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm font-medium cursor-pointer"
-              onClick={onBrowseClick}
+              disabled={useRecommendedPath}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm font-medium cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
+              onClick={onBrowseProjectClick}
             >
               Browse
             </button>
+          </div>
+          
+          <div className="flex items-center gap-2 mt-2">
+            <input
+              type="checkbox"
+              id="useRecommendedPath"
+              checked={useRecommendedPath}
+              onChange={(e) => setUseRecommendedPath(e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label htmlFor="useRecommendedPath" className="text-sm text-gray-700">
+              Use recommended path
+            </label>
           </div>
         </div>
 
@@ -59,13 +95,22 @@ const NewProject = () => {
           <label className="block text-sm font-medium text-gray-700">
             ROM Path
           </label>
-          <input
-            type="text"
-            value={romPath}
-            onChange={(e) => setRomPath(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter ROM path"
-          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={romPath}
+              onChange={(e) => setRomPath(e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Select ROM file"
+            />
+            <button
+              type="button"
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm font-medium cursor-pointer"
+              onClick={onBrowseRomClick}
+            >
+              Browse
+            </button>
+          </div>
         </div>
 
         <button
