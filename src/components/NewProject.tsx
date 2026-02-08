@@ -1,8 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import { appLocalDataDir, join } from '@tauri-apps/api/path';
+import { message } from '@tauri-apps/plugin-dialog';
 
-const NewProject = () => {
+interface NewProjectProps {
+  closeNewProjectModal: () => void;
+}
+
+const NewProject = ({ closeNewProjectModal }: NewProjectProps) => {
   const [projectFilePath, setProjectFilePath] = useState("");
   const [projectName, setProjectName] = useState("");
   const [romPath, setRomPath] = useState("");
@@ -22,13 +27,25 @@ const NewProject = () => {
     }
   }
 
-  const onCreateClick = () => {
+  const onCreateClick = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await invoke("create_new_project", {
+        projectFilePath: projectFilePath,
+        projectName: projectName,
+        romPath: romPath,
+      });
+      closeNewProjectModal();
+    }
+    catch (error) {
+      await message(error as string, { title: 'Project Creation Failed', kind: 'error' });
+    }
   }
 
   useEffect(() => {
     if (useRecommendedPath) {
       (async () => {
-        const saveDir = await appLocalDataDir();
+        const saveDir = await join(await appLocalDataDir(), "projects");
         const savePath = await join(saveDir, `${projectName}.proj`);
         setProjectFilePath(savePath);
       })();

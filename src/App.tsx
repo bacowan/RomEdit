@@ -8,6 +8,10 @@ import Modal from "./components/Modal";
 const App = () => {
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
 
+  const closeNewProjectModal = () => {
+    setIsNewProjectOpen(false);
+  }
+
   useEffect(() => {
     setupMenu({
       newProjectAction: () => {
@@ -23,8 +27,8 @@ const App = () => {
         <div>ComponentB</div>
       </Allotment>
 
-      <Modal isOpen={isNewProjectOpen} onClose={() => setIsNewProjectOpen(false)}>
-        <NewProject />
+      <Modal isOpen={isNewProjectOpen} onClose={closeNewProjectModal}>
+        <NewProject closeNewProjectModal={closeNewProjectModal}/>
       </Modal>
     </main>
   );
