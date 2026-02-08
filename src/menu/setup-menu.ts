@@ -1,4 +1,5 @@
 import { Menu, MenuItem, Submenu } from "@tauri-apps/api/menu";
+import { openRomAction } from "./menu-actions";
 
 const setupMenu = async () => {
     const fileSubmenu = await Submenu.new({
@@ -8,7 +9,7 @@ const setupMenu = async () => {
             id: 'new-project',
             text: 'New Project',
             action: () => {
-              console.log('New Project pressed');
+              openRomAction();
             },
           }),
           await MenuItem.new({
@@ -24,15 +25,8 @@ const setupMenu = async () => {
             action: () => {
                 console.log('Save Project pressed');
             },
-          }),
-          await MenuItem.new({
-            id: 'open-rom',
-            text: 'Open ROM',
-            action: () => {
-                console.log('Open ROM pressed');
-            },
-          }),
-        ],
+          })
+        ]
     });
     const editSubmenu = await Submenu.new({
         text: 'Edit',

@@ -1,7 +1,7 @@
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 import { useEffect } from "react";
-import setupMenu from "./setup-menu";
+import setupMenu from "./menu/setup-menu";
 
 const App = () => {
   useEffect(() => {
