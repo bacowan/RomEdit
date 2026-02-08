@@ -1,8 +1,13 @@
-import React from "react";
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
+import { useEffect } from "react";
+import setupMenu from "./setup-menu";
 
 const App = () => {
+  useEffect(() => {
+    setupMenu();
+  }, []);
+
   return (
     <main className="h-screen w-screen">
       <Allotment>
