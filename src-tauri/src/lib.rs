@@ -13,7 +13,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             greet,
-            commands::open_rom_file::open_rom_file])
+            commands::open_file_dialog::open_file_dialog])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
