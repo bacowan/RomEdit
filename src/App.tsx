@@ -1,11 +1,19 @@
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import setupMenu from "./menu/setup-menu";
+import NewProject from "./components/NewProject";
+import Modal from "./components/Modal";
 
 const App = () => {
+  const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
+
   useEffect(() => {
-    setupMenu();
+    setupMenu({
+      newProjectAction: () => {
+        setIsNewProjectOpen(true);
+      }
+    });
   }, []);
 
   return (
@@ -14,6 +22,10 @@ const App = () => {
         <div>ComponentA</div>
         <div>ComponentB</div>
       </Allotment>
+
+      <Modal isOpen={isNewProjectOpen} onClose={() => setIsNewProjectOpen(false)}>
+        <NewProject />
+      </Modal>
     </main>
   );
 }

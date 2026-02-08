@@ -1,0 +1,3 @@
+interface MenuActions {
+    newProjectAction: () => void;
+}
