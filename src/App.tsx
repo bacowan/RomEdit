@@ -6,6 +6,9 @@ import NewProject from "./components/NewProject";
 import Modal from "./components/Modal";
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { open } from '@tauri-apps/plugin-dialog';
+import { appLocalDataDir, join } from "@tauri-apps/api/path";
+import { invoke } from "@tauri-apps/api/core";
 
 const App = () => {
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
@@ -18,6 +21,19 @@ const App = () => {
     setupMenu({
       newProjectAction: () => {
         setIsNewProjectOpen(true);
+      },
+      loadProjectAction: async () => {
+        const path = await open({
+          multiple: false,
+          directory: false,
+          defaultPath: await join(await appLocalDataDir(), "projects"),
+          filters: [{ name: 'Rom Edit Project', extensions: ['rep'] }],
+        });
+        if (path && typeof path === "string") {
+          await invoke("load_project", {
+            projectPath: path,
+          });
+        }
       }
     });
   }, []);

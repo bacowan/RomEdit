@@ -37,13 +37,13 @@ const NewProject = ({ closeNewProjectModal }: NewProjectProps) => {
   const onCreateClick = async (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
     try {
-      await invoke("create_new_project", {
+      const filePath = await invoke("create_new_project", {
         projectDirectoryPath: projectDirectoryPath,
         projectName: projectName,
         romPath: romPath,
       });
       await invoke("load_project", {
-        projectPath: projectDirectoryPath,
+        projectPath: filePath,
       });
       closeNewProjectModal();
     }

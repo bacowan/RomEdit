@@ -1,4 +1,5 @@
 import { Menu, MenuItem, Submenu } from "@tauri-apps/api/menu";
+import { act } from "react";
 
 const setupMenu = async (actions: MenuActions) => {
     const fileSubmenu = await Submenu.new({
@@ -15,7 +16,7 @@ const setupMenu = async (actions: MenuActions) => {
             id: 'open-project',
             text: 'Open Project',
             action: () => {
-              console.log('Open Project pressed');
+              actions.loadProjectAction();
             },
           }),
           await MenuItem.new({
