@@ -42,6 +42,9 @@ const NewProject = ({ closeNewProjectModal }: NewProjectProps) => {
         projectName: projectName,
         romPath: romPath,
       });
+      await invoke("load_project", {
+        projectPath: projectDirectoryPath,
+      });
       closeNewProjectModal();
     }
     catch (error) {

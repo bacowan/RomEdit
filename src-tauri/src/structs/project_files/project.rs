@@ -1,5 +1,8 @@
+use serde::Serialize;
+use serde::Deserialize;
+
 #[derive(Serialize, Deserialize)]
-struct Project {
-    name: String,
-    rom_path: String
+pub struct Project {
+    pub name: String,
+    pub rom_path: String
 }

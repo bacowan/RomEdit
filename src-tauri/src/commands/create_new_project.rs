@@ -3,8 +3,6 @@ use std::io::{Cursor, Write};
 use std::path::{Path, PathBuf};
 
 use serde_json::json;
-use zip::ZipWriter;
-use zip::write::{SimpleFileOptions};
 
 #[tauri::command]
 pub fn create_new_project(project_name: String, rom_path: String, project_directory_path: String) -> Result<(), String> {
