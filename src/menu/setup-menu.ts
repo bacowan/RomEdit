@@ -1,5 +1,4 @@
 import { Menu, MenuItem, Submenu } from "@tauri-apps/api/menu";
-import { act } from "react";
 
 const setupMenu = async (actions: MenuActions) => {
     const fileSubmenu = await Submenu.new({

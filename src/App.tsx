@@ -9,6 +9,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { open } from '@tauri-apps/plugin-dialog';
 import { appLocalDataDir, join } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
+import { HexSource } from "./components/views/HexSource";
 
 const App = () => {
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
@@ -47,7 +48,7 @@ const App = () => {
   return (
     <main className="h-screen w-screen">
       <Allotment>
-        <div>ComponentA</div>
+        <HexSource />
         <div>ComponentB</div>
       </Allotment>
 
