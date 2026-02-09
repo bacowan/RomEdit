@@ -1,5 +1,5 @@
 use std::{path::PathBuf, sync::Mutex};
-
+use tauri::{AppHandle, Emitter};
 use memmap2::Mmap;
 use tauri::State;
 use std::fs::{self, File};
@@ -8,7 +8,7 @@ use crate::structs::app_state::AppState;
 use crate::structs::project_files::project::Project;
 
 #[tauri::command]
-pub fn load_project(project_path: String, state: State<Mutex<AppState>>) -> Result<(), String> {
+pub fn load_project(project_path: String, state: State<Mutex<AppState>>, app: tauri::AppHandle) -> Result<(), String> {
     let project_path_buffer = PathBuf::from(project_path.as_str());
     let project_json_path = project_path_buffer.join("project.json");
 
@@ -27,6 +27,8 @@ pub fn load_project(project_path: String, state: State<Mutex<AppState>>) -> Resu
         .map_err(|e| format!("Failed to acquire app state lock: {}", e))?;
 
     app_state.rom_file_map = Some(mmap);
+
+    app.emit("project-loaded", project.name).unwrap();
 
     return Ok(());
 }

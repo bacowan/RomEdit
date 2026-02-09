@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import setupMenu from "./menu/setup-menu";
 import NewProject from "./components/NewProject";
 import Modal from "./components/Modal";
+import { listen } from '@tauri-apps/api/event';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const App = () => {
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
@@ -17,6 +19,12 @@ const App = () => {
       newProjectAction: () => {
         setIsNewProjectOpen(true);
       }
+    });
+  }, []);
+
+  useEffect(() => {
+    listen<String>('project-loaded', (event) => {
+      getCurrentWindow().setTitle(`Rom Edit - ${event.payload}`);
     });
   }, []);
 
