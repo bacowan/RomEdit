@@ -2,36 +2,43 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import { appLocalDataDir, join } from '@tauri-apps/api/path';
 import { message } from '@tauri-apps/plugin-dialog';
+import { open } from '@tauri-apps/plugin-dialog';
 
 interface NewProjectProps {
   closeNewProjectModal: () => void;
 }
 
 const NewProject = ({ closeNewProjectModal }: NewProjectProps) => {
-  const [projectFilePath, setProjectFilePath] = useState("");
+  const [projectDirectoryPath, setProjectDirectoryPath] = useState("");
   const [projectName, setProjectName] = useState("");
   const [romPath, setRomPath] = useState("");
   const [useRecommendedPath, setUseRecommendedPath] = useState(true);
 
   const onBrowseProjectClick = async () => {
-    const path = await invoke("open_file_dialog");
+    const path = await open({
+      multiple: false,
+      directory: true,
+    });
     if (path && typeof path === "string") {
-      setProjectFilePath(path);
+      setProjectDirectoryPath(path);
     }
   }
 
   const onBrowseRomClick = async () => {
-    const path = await invoke("open_file_dialog");
+    const path = await open({
+      multiple: false,
+      directory: false,
+    });
     if (path && typeof path === "string") {
       setRomPath(path);
     }
   }
 
-  const onCreateClick = async (e: React.FormEvent) => {
+  const onCreateClick = async (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
     try {
       await invoke("create_new_project", {
-        projectFilePath: projectFilePath,
+        projectDirectoryPath: projectDirectoryPath,
         projectName: projectName,
         romPath: romPath,
       });
@@ -45,14 +52,13 @@ const NewProject = ({ closeNewProjectModal }: NewProjectProps) => {
   useEffect(() => {
     if (useRecommendedPath) {
       (async () => {
-        const saveDir = await join(await appLocalDataDir(), "projects");
-        const savePath = await join(saveDir, `${projectName}.proj`);
-        setProjectFilePath(savePath);
+        const savePath = await join(await appLocalDataDir(), "projects", projectName);
+        setProjectDirectoryPath(savePath);
       })();
     }
   }, [useRecommendedPath, projectName]);
 
-  const isFormValid = projectFilePath && projectName && romPath;
+  const isFormValid = projectDirectoryPath && projectName && romPath;
 
   return (
     <div className="p-8 w-[500px]">
@@ -60,13 +66,13 @@ const NewProject = ({ closeNewProjectModal }: NewProjectProps) => {
       <form className="space-y-4">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
-            Project File Path
+            Project Directory Path
           </label>
           <div className="flex gap-2">
             <input
               type="text"
-              value={projectFilePath}
-              onChange={(e) => setProjectFilePath(e.target.value)}
+              value={projectDirectoryPath}
+              onChange={(e) => setProjectDirectoryPath(e.target.value)}
               readOnly={useRecommendedPath}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Select project file location"
