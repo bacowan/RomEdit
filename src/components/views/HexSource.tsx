@@ -1,7 +1,8 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useRef } from "react";
-
-const emToPx = (em: number) => em * parseFloat(getComputedStyle(document.documentElement).fontSize);
+import { useEffect, useRef, useState } from "react";
+import { emToPx } from "../../utils/domUtils";
+import { debounce } from "../../utils/generalUtils";
+import { invoke } from "@tauri-apps/api/core";
 
 export const HexSource = () => {
   const headerValues = [
@@ -12,15 +13,45 @@ export const HexSource = () => {
     )
   ];
 
+  const [visibleData, setVisibleData] = useState<number[]>([]);
+
   const parentRef = useRef(null)
 
-  // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: 10000,
     getScrollElement: () => parentRef.current,
     estimateSize: () => emToPx(1.2),
   })
 
+  const virtualItems = rowVirtualizer.getVirtualItems();
+  const startIndex = virtualItems[0]?.index ?? 0;
+  const endIndex = virtualItems[virtualItems.length - 1]?.index ?? 0;
+
+  const loadData = async (start: number, end: number) => {
+    const bytes = await invoke("load_rom_bytes", {
+      start: start * 16,
+      end: end * 16,
+    });
+    if (bytes instanceof ArrayBuffer) {
+      const asArray: number[] = [];
+      for (const entry of new Uint8Array(bytes)) {
+        asArray.push(entry);
+      }
+      setVisibleData(asArray);
+    }
+  }
+  
+  const debouncedLoadData = useRef(
+    debounce(
+      (start: number, end: number) => loadData(start, end),
+      100,
+      { onCooldown: () => setVisibleData([]) }
+    )
+  ).current;
+
+  useEffect(() => {
+    loadData(startIndex, endIndex);
+  }, [startIndex, endIndex]);
 
   return (
     <div className="h-full flex flex-col">
@@ -36,7 +67,7 @@ export const HexSource = () => {
             className="w-full relative"
             style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
           >
-            {rowVirtualizer.getVirtualItems().map((virtualItem) => (
+            {virtualItems.map((virtualItem) => (
               <div
                 key={virtualItem.key}
                 className="flex flex-row"
@@ -54,7 +85,9 @@ export const HexSource = () => {
                       <div
                         key={i}
                         className="text-sm font-mono font-bold px-1">
-                          1F
+                          {
+                            visibleData[(virtualItem.index - startIndex) * 16 + i]?.toString(16).padStart(2, '0').toUpperCase() ?? ".."
+                          }
                       </div>
                     );
                   })}

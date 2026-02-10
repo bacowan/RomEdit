@@ -21,6 +21,7 @@ pub fn run() {
             greet,
             commands::create_new_project::create_new_project,
             commands::load_project::load_project,
+            commands::load_rom_bytes::load_rom_bytes
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

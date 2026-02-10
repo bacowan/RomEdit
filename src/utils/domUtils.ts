@@ -1,0 +1,1 @@
+export const emToPx = (em: number) => em * parseFloat(getComputedStyle(document.documentElement).fontSize);
