@@ -11,9 +11,11 @@ export const HexSource = () => {
   const [topRowIndex, setTopRowIndex] = useState(0);
   const [visibleData, setVisibleData] = useState<number[]>([]);
   const [fileSize, setFileSize] = useState(0);
-  const loadIdRef = useRef(0) // used to track what the latest load call was, and ignore all others
   const [projectPath, setProjectPath] = useState<String | null>(null);
   const [gotoInput, setGotoInput] = useState("");
+
+  const loadIdRef = useRef(0) // used to track what the latest load call was, and ignore all others
+  const isProgramaticallyScrolling = useRef(false);
 
   const totalRowCount = Math.ceil(fileSize / 16);
   const visibleRowCount = Math.ceil(componentHeight / rowHeight);
@@ -24,13 +26,17 @@ export const HexSource = () => {
 
   const virtualizedContainerSize = 96000;
 
-  // listen for when a new file is loaded, and grab the new data
-  useEffect(() => {
-    listen<ProjectLoadedEventParams>('project-loaded', (event) => {
-      setProjectPath(event.payload.path);
-      setFileSize(event.payload.size);
-    });
-  }, []);
+  const handleGoto = () => {
+    const address = parseInt(gotoInput, 16);
+    if (isNaN(address)) return;
+    const el = componentRef.current;
+    if (!el) return;
+    const row = Math.max(0, Math.min(totalRowCount - visibleRowCount, Math.floor(address / 16)));
+    setTopRowIndex(row);
+    isProgramaticallyScrolling.current = true;
+    const { scrollHeight, clientHeight } = el;
+    el.scrollTop = (row / totalRowCount) * (scrollHeight - clientHeight);
+  };
 
   const loadData = async (start: number, end: number) => {
     const id = ++loadIdRef.current;
@@ -47,6 +53,14 @@ export const HexSource = () => {
       setVisibleData(asArray);
     }
   }
+
+  // listen for when a new file is loaded, and grab the new data
+  useEffect(() => {
+    listen<ProjectLoadedEventParams>('project-loaded', (event) => {
+      setProjectPath(event.payload.path);
+      setFileSize(event.payload.size);
+    });
+  }, []);
 
   // load new data into view
   useEffect(() => {
@@ -68,6 +82,13 @@ export const HexSource = () => {
 
   // keep track of scrolling
   const onScroll = useCallback(() => {
+    // programmatically setting the scroll position
+    // will cause this to fire once. Ignore it
+    // this one time.
+    if (isProgramaticallyScrolling.current) {
+      isProgramaticallyScrolling.current = false;
+      return;
+    }
     const el = componentRef.current;
     if (!el) return;
     const { scrollTop, scrollHeight, clientHeight } = el;
@@ -121,13 +142,6 @@ export const HexSource = () => {
     return () => el.removeEventListener('wheel', onWheel);
   }, [totalRowCount, visibleRowCount]);
 
-  const handleGoto = () => {
-    const address = parseInt(gotoInput, 16);
-    if (isNaN(address)) return;
-    const row = Math.floor(address / 16);
-    setTopRowIndex(Math.max(0, Math.min(totalRowCount - visibleRowCount, row)));
-  };
-
   return (
     <div className="flex-1 flex flex-col h-full">
       <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-300">
@@ -176,7 +190,6 @@ export const HexSource = () => {
             </div>
       </div>
     </div>
-  )
   </div>
   )
 }
