@@ -10,6 +10,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { appLocalDataDir, join } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
 import { HexSource } from "./components/views/HexSource";
+import { DataLabels } from "./components/views/DataLabels";
 
 const App = () => {
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
@@ -49,7 +50,7 @@ const App = () => {
     <main className="h-screen w-screen">
       <Allotment>
         <HexSource />
-        <div>ComponentB</div>
+        <DataLabels/>
       </Allotment>
 
       <Modal isOpen={isNewProjectOpen} onClose={closeNewProjectModal}>
