@@ -1,21 +1,12 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef, useState } from "react";
 import { emToPx } from "../../utils/domUtils";
-import { debounce } from "../../utils/generalUtils";
 import { invoke } from "@tauri-apps/api/core";
 
 export const HexSource = () => {
-  const headerValues = [
-    "0000",
-    ...
-    Array.from({ length: 16 }, (_, i) =>
-      i.toString(16).padStart(2, '0').toUpperCase()
-    )
-  ];
-
   const [visibleData, setVisibleData] = useState<number[]>([]);
-
   const parentRef = useRef(null)
+  const loadIdRef = useRef(0) // used to track what the latest load call was, and ignore all others
 
   const rowVirtualizer = useVirtualizer({
     count: 10000,
@@ -28,10 +19,12 @@ export const HexSource = () => {
   const endIndex = virtualItems[virtualItems.length - 1]?.index ?? 0;
 
   const loadData = async (start: number, end: number) => {
+    const id = ++loadIdRef.current;
     const bytes = await invoke("load_rom_bytes", {
       start: start * 16,
       end: end * 16,
     });
+    if (id !== loadIdRef.current) return; // ignore all but the latest call
     if (bytes instanceof ArrayBuffer) {
       const asArray: number[] = [];
       for (const entry of new Uint8Array(bytes)) {
@@ -40,18 +33,18 @@ export const HexSource = () => {
       setVisibleData(asArray);
     }
   }
-  
-  const debouncedLoadData = useRef(
-    debounce(
-      (start: number, end: number) => loadData(start, end),
-      100,
-      { onCooldown: () => setVisibleData([]) }
-    )
-  ).current;
 
   useEffect(() => {
     loadData(startIndex, endIndex);
   }, [startIndex, endIndex]);
+  
+  const headerValues = [
+    "0000",
+    ...
+    Array.from({ length: 16 }, (_, i) =>
+      i.toString(16).padStart(2, '0').toUpperCase()
+    )
+  ];
 
   return (
     <div className="h-full flex flex-col">
