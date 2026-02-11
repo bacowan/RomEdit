@@ -89,6 +89,37 @@ export const HexSource = () => {
     return () => el.removeEventListener('scroll', onScroll);
   }, [onScroll]);
 
+  // manual arrow key behaviour 
+  useEffect(() => {
+    const el = componentRef.current;
+    if (!el) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      const scrollKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+      if (scrollKeys.includes(e.key)) {
+        e.preventDefault();
+      }
+    };
+
+    el.addEventListener('keydown', onKeyDown);
+    return () => el.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // manual scroll wheel behaviour
+  useEffect(() => {
+    const el = componentRef.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rowDelta = Math.round(e.deltaY / rowHeight);
+      setTopRowIndex(prev => Math.max(0, Math.min(totalRowCount - visibleRowCount, prev + rowDelta)));
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false }); // passive: false required for preventDefault
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [totalRowCount, visibleRowCount]);
+
   return (
     <div ref={componentRef} className="flex-1 overflow-auto h-full">
       <div
@@ -121,125 +152,4 @@ export const HexSource = () => {
       </div>
     </div>
   )
-
-  // const [visibleData, setVisibleData] = useState<number[]>([]);
-  // const [projectPath, setProjectPath] = useState<String | null>(null);
-  // const [fileSize, setFileSize] = useState<number>(0);
-  // const parentRef = useRef(null)
-  // const loadIdRef = useRef(0) // used to track what the latest load call was, and ignore all others
-
-  // const trueRowCount = Math.ceil(fileSize / 16);
-  // const virtualRowCount = Math.min(Math.ceil(fileSize / 16), 5000);
-  // const virtualRowToRowScale = Math.floor(trueRowCount / virtualRowCount);
-
-  // const virtualIndexToRealIndex = (virtualIndex: number) => {
-  //   return virtualIndex * virtualRowToRowScale;
-  // }
-
-  // const rowVirtualizer = useVirtualizer({
-  //   count: virtualRowCount,
-  //   getScrollElement: () => parentRef.current,
-  //   estimateSize: () => rowSize
-  // })
-
-  // const virtualItems = rowVirtualizer.getVirtualItems();
-  // const virtualStartIndex = virtualItems[0]?.index ?? 0;
-  // const virtualEndIndex = virtualItems[virtualItems.length - 1]?.index ?? 0;
-  // const realStartIndex = virtualIndexToRealIndex(virtualStartIndex)
-
-  // const loadData = async (start: number, end: number) => {
-  //   const id = ++loadIdRef.current;
-  //   console.log(id)
-  //   const bytes = await invoke("load_rom_bytes", {
-  //     start: start * 16,
-  //     end: end * 16,
-  //   });
-  //   if (id !== loadIdRef.current) return; // ignore all but the latest call
-  //   if (bytes instanceof ArrayBuffer) {
-  //     const asArray: number[] = [];
-  //     for (const entry of new Uint8Array(bytes)) {
-  //       asArray.push(entry);
-  //     }
-  //     setVisibleData(asArray);
-  //   }
-  // }
-
-  // // const debouncedLoadData = useRef(
-  // //   debounce(
-  // //     (start: number, end: number) => loadData(start, end),
-  // //     1000,
-  // //     { onCooldown: () => setVisibleData([]) }
-  // //   )
-  // // ).current;
-
-  // // load new hex view
-  // useEffect(() => {
-  //   loadData(realStartIndex, realStartIndex + virtualEndIndex - virtualStartIndex);
-  // }, [realStartIndex, virtualStartIndex, virtualEndIndex, projectPath]);
-
-  // // listen for when a new file is loaded, and grab the new data
-  // useEffect(() => {
-  //   listen<ProjectLoadedEventParams>('project-loaded', (event) => {
-  //     setProjectPath(event.payload.path);
-  //     setFileSize(event.payload.size);
-  //   });
-  // }, []);
-  
-  // const fileSizeHex = fileSize.toString(16);
-  // const headerValues = [
-  //   fileSizeHex,
-  //   ...
-  //   Array.from({ length: 16 }, (_, i) =>
-  //     i.toString(16).padStart(2, '0').toUpperCase()
-  //   )
-  // ];
-
-  // return (
-  //   <div className="h-full flex flex-col">
-  //     <div className="flex flex-row pb-1 border-b border-gray-300">
-  //       {headerValues.map((hex, index) => (
-  //         <div key={`header-${hex}`} className={`text-sm font-mono font-bold px-1 ${index === 0 ? 'invisible' : ''}`}>
-  //           {hex}
-  //         </div>
-  //       ))}
-  //     </div>
-  //     <div ref={parentRef} className="flex-1 overflow-auto">
-  //       <div
-  //           className="w-full relative"
-  //           style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-  //         >
-  //           {virtualItems.map((virtualItem) => (
-  //             <div
-  //               key={virtualItem.key}
-  //               className="flex flex-row"
-  //               style={{
-  //                 position: 'absolute',
-  //                 top: 0,
-  //                 left: 0,
-  //                 width: '100%',
-  //                 height: `${virtualItem.size}px`,
-  //                 transform: `translateY(${virtualItem.start}px)`,
-  //               }}>
-  //                 <span className="text-sm font-mono font-bold px-1 border-r border-gray-300">
-  //                   {
-  //                     (realStartIndex + virtualItem.index * 16).toString(16).padStart(fileSizeHex.length, '0').toUpperCase()
-  //                   }
-  //                 </span>
-  //                 {Array.from({ length: 16 }, (_, i) => {
-  //                   return (
-  //                     <div
-  //                       key={i}
-  //                       className="text-sm font-mono font-bold px-1">
-  //                         {
-  //                           visibleData[(virtualItem.index - virtualStartIndex) * 16 + i]?.toString(16).padStart(2, '0').toUpperCase() ?? ".."
-  //                         }
-  //                     </div>
-  //                   );
-  //                 })}
-  //             </div>
-  //           ))}
-  //       </div>
-  //     </div>
-  //   </div>
-  // )
 }
