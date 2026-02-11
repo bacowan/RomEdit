@@ -1,4 +1,5 @@
 use std::sync::Mutex;
+use std::cmp;
 
 use tauri::{State, ipc::Response};
 use crate::structs::app_state::AppState;
@@ -9,10 +10,10 @@ pub fn load_rom_bytes(start: usize, end: usize, state: State<Mutex<AppState>>) -
 
     if let Some(mmap) = &app_state.rom_file_map {
         let len = mmap.len();
-        if end >= len {
+        if start >= len {
             return Err("Offset out of bounds".to_string());
         }
-        Ok(tauri::ipc::Response::new(mmap[start..end].to_vec()))
+        Ok(tauri::ipc::Response::new(mmap[start..cmp::min(end, len)].to_vec()))
     }
     else {
         Err("No file opened".to_string())

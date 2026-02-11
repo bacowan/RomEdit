@@ -40,8 +40,8 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    listen<String>('project-loaded', (event) => {
-      getCurrentWindow().setTitle(`Rom Edit - ${event.payload}`);
+    listen<ProjectLoadedEventParams>('project-loaded', (event) => {
+      getCurrentWindow().setTitle(`Rom Edit - ${event.payload.path}`);
     });
   }, []);
 
