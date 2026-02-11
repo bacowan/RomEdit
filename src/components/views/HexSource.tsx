@@ -13,6 +13,7 @@ export const HexSource = () => {
   const [fileSize, setFileSize] = useState(0);
   const loadIdRef = useRef(0) // used to track what the latest load call was, and ignore all others
   const [projectPath, setProjectPath] = useState<String | null>(null);
+  const [gotoInput, setGotoInput] = useState("");
 
   const totalRowCount = Math.ceil(fileSize / 16);
   const visibleRowCount = Math.ceil(componentHeight / rowHeight);
@@ -120,8 +121,32 @@ export const HexSource = () => {
     return () => el.removeEventListener('wheel', onWheel);
   }, [totalRowCount, visibleRowCount]);
 
+  const handleGoto = () => {
+    const address = parseInt(gotoInput, 16);
+    if (isNaN(address)) return;
+    const row = Math.floor(address / 16);
+    setTopRowIndex(Math.max(0, Math.min(totalRowCount - visibleRowCount, row)));
+  };
+
   return (
-    <div ref={componentRef} className="flex-1 overflow-auto h-full">
+    <div className="flex-1 flex flex-col h-full">
+      <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-300">
+        <input
+          type="text"
+          value={gotoInput}
+          onChange={(e) => setGotoInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") handleGoto(); }}
+          placeholder="hex address"
+          className="text-sm font-mono px-1 py-0.5 border border-gray-300 rounded w-32"
+        />
+        <button
+          onClick={handleGoto}
+          className="text-sm font-mono font-bold px-2 py-0.5 border border-gray-300 rounded hover:bg-gray-100"
+        >
+          Go to
+        </button>
+      </div>
+      <div ref={componentRef} className="flex-1 overflow-auto">
       <div
             className="w-full relative"
             style={{ height: `${virtualizedContainerSize}px` }}
@@ -151,5 +176,7 @@ export const HexSource = () => {
             </div>
       </div>
     </div>
+  )
+  </div>
   )
 }
